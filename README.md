@@ -30,9 +30,8 @@ ChatVox AI is a **multi-modal AI chatbot** that supports both **voice (STT & TTS
 - Virtual environment (optional but recommended)  
 
 ### 🔧 **1️⃣ Clone the Repository**  
-
+git clone https://github.com/Rohitkumarsony/ChatVox-AI.git
 ```bash
-git clone https://github.com/yourusername/chatvox-ai.git
 cd chatvox-ai
 
 # Create a virtual environment
