@@ -4,6 +4,22 @@ ChatVox AI is a **multi-modal AI chatbot** that supports both **voice (STT & TTS
 
 ![Screenshot of the ChatVox-AI Interface](/src/image/image.png)
 
+## ChatVox-AI API Endpoints
+![Screenshot of the ChatVox-AI Interface](/src/image/api.png)
+
+1. **Crawl Data and Save to File**  
+   - Performs a `PUT` request to crawl website links and saves the extracted data in a `.txt` file.  
+
+2. **Upload and Train Model**  
+   - Allows uploading a `.txt` file and trains the model using the provided data.  
+
+3. **Query the Model**  
+   - Enables users to ask questions and receive responses based on the trained model.  
+
+4. **Health Check**  
+   - Provides an endpoint to check the API’s health status.  
+
+
 
 ## 🚀 Features  
 
