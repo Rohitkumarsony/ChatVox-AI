@@ -14,7 +14,7 @@ ChatVox AI is a **multi-modal AI chatbot** that supports both **voice (STT & TTS
    - Allows uploading a `.txt` file and trains the model using the provided data.  
 
 3. **Query the Model**  
-   - Enables users to ask questions and receive responses based on the trained model.  
+   - Enables users to ask questions and receive responses based on the trained data using vector db.  
 
 4. **Health Check**  
    - Provides an endpoint to check the API’s health status.  
