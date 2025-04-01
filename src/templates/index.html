@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot & Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        .chat-container {
+            width: 400px;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: blue;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            height: calc(100% - 100px);
+        }
+
+        .chat-box .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 70%;
+        }
+
+        .chat-box .message.user {
+            background: #007bff;
+            color: #fff;
+            margin-left: auto;
+        }
+
+        .chat-box .message.bot {
+            background: #e0e0e0;
+            color: #000;
+        }
+
+        .chat-box .message.audio {
+            background: #e0e0e0;
+            color: #000;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            background: black;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input button:hover {
+            background: #333;
+        }
+
+        .mic-button {
+            background: black;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 41px;
+            height: 41px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .mic-button:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Botanic</h1>
+        </div>
+        <div class="chat-box" id="chat-box">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Type a message..." />
+            <button id="send-btn" style="display: none;">&#x2B06;</button>
+            <button id="mic-btn" style="
+        background-color: black;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 41px;
+        height: 41px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        position: relative;
+    ">
+    <!-- Vertical Bar 1 -->
+    <span style="
+        background-color: white;
+        width: 4px;
+        height: 8px;
+        border-radius: 2px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 20%;
+    "></span>
+    <!-- Vertical Bar 2 -->
+    <span style="
+        background-color: white;
+        width: 4px;
+        height: 21px;
+        border-radius: 2px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 40%;
+    "></span>
+    <!-- Vertical Bar 3 -->
+    <span style="
+        background-color: white;
+        width: 3.5px;
+        height: 13px;
+        border-radius: 2px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 60%;
+    "></span>
+    <!-- Vertical Bar 4 -->
+    <span style="
+        background-color: white;
+        width: 4px;
+        height: 8px;
+        border-radius: 2px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 80%;
+    "></span>
+</button> 
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const micBtn = document.getElementById('mic-btn');
+    
+        // WebSocket for Text Queries
+        const textSocket = new WebSocket('ws://localhost:8000/ws/query');
+    
+        textSocket.onopen = () => console.log('Connected to Text WebSocket');
+    
+        textSocket.onmessage = (event) => {
+            const response = JSON.parse(event.data);
+            if (response.type === 'response' || response.type === 'user_agent') {
+                addMessage(response.answer, 'bot');
+            } else if (response.type === 'error') {
+                addMessage('Error: ' + response.message, 'bot');
+            }
+            // Re-enable input field and buttons for text queries
+            enableInputAndButtons();
+        };
+    
+        textSocket.onerror = () => addMessage('Error: Unable to connect to the text server.', 'bot');
+        textSocket.onclose = () => addMessage('Text WebSocket closed. Please refresh.', 'bot');
+    
+        // WebSocket for Voice Queries
+        const voiceSocket = new WebSocket("ws://localhost:8000/SpeechTTS");
+        let audioChunks = [];
+        let audioPlaying = false;
+        let audioQueue = [];
+    
+        voiceSocket.onopen = () => console.log("Connected to Voice WebSocket");
+    
+        voiceSocket.onmessage = async (event) => {
+            if (event.data instanceof Blob) {
+                const audioBlob = event.data;
+                audioChunks.push(audioBlob);
+                if (!audioPlaying) {
+                    checkAndPlayAudio();
+                } else {
+                    audioQueue.push(audioBlob);
+                }
+            } else if (event.data === "[END]") {
+                console.log("Final response received. Waiting for audio playback to finish...");
+            }
+        };
+    
+        voiceSocket.onclose = () => console.log("Voice WebSocket closed.");
+    
+        function addMessage(content, sender, isAudio = false) {
+            const message = document.createElement('div');
+            message.classList.add('message', sender);
+    
+            if (isAudio) {
+                const audioElement = document.createElement('audio');
+                audioElement.controls = true;
+                audioElement.src = URL.createObjectURL(content);
+                message.appendChild(audioElement);
+    
+                // When the last audio file ends, re-enable input field and buttons for voice queries
+                audioElement.onended = function () {
+                    if (audioQueue.length === 0) {
+                        console.log("Last audio finished. Enabling input and buttons...");
+                        enableInputAndButtons(); // Re-enable everything after full audio response
+                    }
+                };
+            } else {
+                message.textContent = content;
+            }
+    
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    
+        function disableTextQueryUI() {
+            sendBtn.style.display = 'none';
+            micBtn.style.display = 'none';
+            messageInput.style.display = 'none';
+        }
+    
+        function disableVoiceQueryUI() {
+            micBtn.style.display = 'none';
+            messageInput.style.display = 'none';
+        }
+    
+        function enableInputAndButtons() {
+            micBtn.style.display = 'flex';
+            messageInput.style.display = 'block';
+            sendBtn.style.display = messageInput.value.trim() !== '' ? 'flex' : 'none';
+        }
+    
+        sendBtn.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            addMessage(message, 'user');
+            disableTextQueryUI(); // Hide input field and buttons for text queries
+            textSocket.send(message);
+            messageInput.value = '';
+        });
+    
+        // Handle input focus and text changes
+        messageInput.addEventListener('input', () => {
+            if (messageInput.value.trim() === '') {
+                sendBtn.style.display = 'none';
+                micBtn.style.display = 'flex';
+            } else {
+                sendBtn.style.display = 'flex';
+                micBtn.style.display = 'none';
+            }
+        });
+    
+        // Speech Recognition Logic
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+    
+            micBtn.addEventListener('click', () => {
+                recognition.start();
+                micBtn.style.display = 'flex'; // Show mic button during speech
+            });
+    
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                addMessage(transcript, 'user');
+                disableVoiceQueryUI(); // Hide input field and mic button for voice queries
+                voiceSocket.send(transcript);
+                console.log("User spoke, waiting for response...");
+            };
+    
+            recognition.onend = () => {
+                console.log("Speech recognition ended, waiting for AI response...");
+                // Buttons will be enabled only after audio response plays
+            };
+        } else {
+            micBtn.disabled = true;
+            micBtn.title = 'Speech recognition is not supported in this browser.';
+        }
+    
+        async function checkAndPlayAudio() {
+            if (!audioPlaying && audioChunks.length > 0) {
+                playAudioChunks();
+            }
+        }
+    
+        async function playAudioChunks() {
+            if (audioChunks.length === 0) {
+                return;
+            }
+    
+            audioPlaying = true;
+            const concatenatedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    
+            addMessage(concatenatedBlob, 'bot', true); // Show audio in chat
+    
+            const audioElement = new Audio(URL.createObjectURL(concatenatedBlob));
+            audioElement.play();
+    
+            // When the last audio file ends, re-enable input field and buttons
+            audioElement.onended = function () {
+                audioPlaying = false;
+                audioChunks = [];
+    
+                if (audioQueue.length > 0) {
+                    audioChunks = audioQueue;
+                    audioQueue = [];
+                    playAudioChunks();
+                } else {
+                    console.log("Final audio finished. Enabling input and buttons...");
+                    enableInputAndButtons(); // Re-enable everything after full audio playback
+                }
+            };
+        }
+    </script>
+    
+</body>
+</html>
